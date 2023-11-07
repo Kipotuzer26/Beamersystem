@@ -5,16 +5,29 @@
     <title>Websocket Example</title>
 </head>
 <body>
-    <img src="" alt="ERROR :c" id="slide">
+    <div id="slide">
+    </div>
 </body>
     <script>
         const socket = new WebSocket('ws://localhost:3000');
 
-        socket.onmessage = (event) => {
+        socket.onmessage = async (event) => {
             console.log(`Recieved: ${event.data}`);
             if(Number(event.data) != NaN){
+                //get type
+                var response = await fetch(`/slideinfo/1/${event.data}`)
+                var type = await response.text();
+                console.log(type)
                 const slide = document.getElementById('slide');
-                slide.src = `slide/1/${event.data}`
+                // slide.src = `/slide/1/${event.data}`
+                if(type == "video"){
+                    slide.innerHTML = ` <video controls autoplay="">
+                                          <source src="/slide/1/${event.data}" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                        </video> `
+                } else {
+                    slide.innerHTML = `<${type} src="/slide/1/${event.data}" alt="Error :c" id="display">`
+                }
             }
         }
     </script>
