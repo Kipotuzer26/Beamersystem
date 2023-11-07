@@ -1,0 +1,28 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Websocket Example</title>
+</head>
+<body>
+    <input type="text" id="message" placeholder="Enter a message">
+    <button onclick="sendMessage()">send</button>
+    <hr>
+    <div id="output"></div>
+</body>
+    <script>
+        const socket = new WebSocket('ws://localhost:3000');
+
+        socket.onmessage = (event) => {
+            console.log(`Recieved: ${event.data}`);
+            const output = document.getElementById('output');
+            output.innerHTML = `<p> Set current Slide to: ${event.data} </p>`;
+        }
+        function sendMessage() {
+            const messageInput = document.getElementById('message');
+            const message = messageInput.value;
+            socket.send(message);
+            messageInput.value = '';
+        }
+    </script>
+</html>
