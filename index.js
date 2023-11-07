@@ -35,10 +35,10 @@ app.get('/slideinfo/:presid/:slide', (req, res) => {
             res.send("img");
             break;
         case ".mp4":
-            res.send("mov");
+            res.send("video");
             break;
         default:
-            res.send("unsure");
+            res.send("img");
             break;
     }
 })
