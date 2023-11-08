@@ -109,6 +109,7 @@ wss.on('connection', (ws) => {
         console.log(`Recieved: ${message}`);
         slide = Number(`${message}`)
         wss.clients.forEach((client) => {
+            console.log(client)
             // console.log("i")
             // if(client !== ws && client.readyState === WebSocket.OPEN) {
                 client.send(Number(`${message}`));
@@ -117,7 +118,7 @@ wss.on('connection', (ws) => {
             // }
         });
     })
-    ws.on('close', () => {
+    ws.on('close', (code, reason) => {
         console.log('WebSocket disconnected');
     }) 
 })

@@ -8,6 +8,26 @@
     <div id="slide">
     </div>
 </body>
+    <style>
+        body{
+            margin: 0 0 0 0;
+            background-color: black;
+        }
+        #slide {
+            width: 99vw;
+            height: 100vh;
+     
+        }
+
+        #display {
+            width: auto;
+            height: 100%;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+    </style>
     <script>
         const socket = new WebSocket('ws://localhost:3000');
         const presid = window.location.search.split('?')[1];
@@ -24,7 +44,7 @@
                 const slide = document.getElementById('slide');
                 // slide.src = `/slide/1/${event.data}`
                 if(type == "video"){
-                    slide.innerHTML = ` <video controls autoplay="">
+                    slide.innerHTML = ` <video autoplay="" id=display>
                                           <source src="/slide/${presid}/${event.data}" type="video/mp4">
                                         Your br3000owser does not support the video tag.
                                         </video> `

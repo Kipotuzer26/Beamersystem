@@ -5,13 +5,14 @@
     <title>Websocket Example</title>
 </head>
 <body>
-    <div class="input">
-        <button id="back"onclick="sendMessage('back')">back</button>
-        <button id="next"onclick="sendMessage('next')">next</button>
-
+    <div class="controller">
+        <div class="input">
+            <button id="back"onclick="sendMessage('back')">back</button>
+            <button id="next"onclick="sendMessage('next')">next</button>
+        </div>
+        <hr>
+        <div id="output"></div>
     </div>
-    <hr>
-    <div id="output"></div>
 </body>
     <script>
         var slide;
