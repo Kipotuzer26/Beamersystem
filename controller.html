@@ -5,24 +5,52 @@
     <title>Websocket Example</title>
 </head>
 <body>
-    <input type="text" id="message" placeholder="Enter a message">
-    <button onclick="sendMessage()">send</button>
+    <div class="input">
+        <button id="back"onclick="sendMessage('back')">back</button>
+        <button id="next"onclick="sendMessage('next')">next</button>
+
+    </div>
     <hr>
     <div id="output"></div>
 </body>
     <script>
+        var slide;
+        var presLength;
+        var init = async () => {
+            var response = await fetch(`/slideinfo/`)
+            var json = await response.json();
+            presLength = json.presLength;
+            slide = Number(json.slide);
+            document.getElementById('next').disabled = slide == Number(presLength)
+            document.getElementById('back').disabled = slide == 1
+            return;
+        }
         const socket = new WebSocket('ws://localhost:3000');
-
-        socket.onmessage = (event) => {
+        
+        socket.onmessage = async (event) => {
+            if(!presLength){
+                await init();
+            }
             console.log(`Recieved: ${event.data}`);
             const output = document.getElementById('output');
-            output.innerHTML = `<p> Set current Slide to: ${event.data} </p>`;
+            var slide = Number(event.data);
+            console.log(slide, presLength)
+            console.log("next", slide==presLength);
+            console.log("back",slide == 1);
+
+            output.innerHTML = `<p> Set current Slide to: ${event.data}/${presLength} </p>`;
         }
-        function sendMessage() {
-            const messageInput = document.getElementById('message');
-            const message = messageInput.value;
-            socket.send(message);
-            messageInput.value = '';
+
+        async function sendMessage(direction) {
+            
+            if(direction=="next"){
+                slide += 1;
+            } else {
+                slide += -1;
+            }
+            socket.send(slide);
+            document.getElementById('next').disabled = slide == Number(presLength)
+            document.getElementById('back').disabled = slide == 1
         }
     </script>
-</html>
+</html>  

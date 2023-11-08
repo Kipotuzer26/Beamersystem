@@ -7,6 +7,17 @@
 <body>
     <h1>Presentations:</h1>
     <div id="presentations"></div>
-
+    
+    <script>
+        async function load(){
+            var response = await fetch('/presentations');
+            var presentations = await response.json();
+            presentations.forEach(element => {
+                document.getElementById('presentations').innerHTML += `<p> <a href="/slide?${element}"> Präsentation \"${element}\" </a> </p>`
+            });
+            console.log(presentations)
+        }
+        load();
+    </script>
 </body>
 </html>

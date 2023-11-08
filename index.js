@@ -26,21 +26,58 @@ app.get('/controller', (req, res) => {
     res.sendFile(__dirname + '/controller.html');
 })
 
-app.get('/slideinfo/:presid/:slide', (req, res) => {
+
+app.get('/presentations', (req, res) => {
+    var presentations = []
+    getDirectories(__dirname + '/cdn/').forEach((directory)=>{
+        presentations.push(directory)
+    })
+    res.send(presentations)
+})
+
+function getDirectories(path){
+    return fs.readdirSync(path).filter( (file) =>{
+        return fs.statSync(path+'/'+file).isDirectory();
+    })
+}
+
+
+
+app.get('/slideinfo/', (req, res) => {
     // console.log(path.extname(findFile(req.params.presid, req.params.slide)));
-    switch(path.extname(findFile(req.params.presid, req.params.slide))){
-        case ".png":
-        case ".jpg":
-        case ".gif":
-            res.send("img");
-            break;
-        case ".mp4":
-            res.send("video");
-            break;
-        default:
-            res.send("img");
-            break;
+    preslength = 0;
+    getDirectories(__dirname + "/cdn/").forEach((directory)=>{
+        preslength = Math.max(preslength,fs.readdirSync(__dirname+ `/cdn/${directory}`).length)
+    })
+
+    var info = {  
+        "presLength": preslength,
+        "slide": slide
     }
+    res.send(info)
+})
+
+app.get('/slideinfo/:presid/:slide', (req, res) => {
+    //console.log(path.extname(findFile(req.params.presid, req.params.slide)));
+    var type = ()=>{
+        switch(path.extname(findFile(req.params.presid, req.params.slide))){
+            case ".png":
+            case ".jpg":
+            case ".gif":
+                return "img"
+                break;
+            case ".mp4":
+                return "video"
+                break;
+            default:
+                return "img"
+                break;
+        }
+    }
+    var info = {
+        "type":type(),
+    }
+    res.send(info)
 })
 
 app.get('/slide/:presid/:slide', (req, res) =>{
@@ -50,7 +87,7 @@ app.get('/slide/:presid/:slide', (req, res) =>{
 function findFile(presid, slide){
     const directoryToSearch = __dirname + `/cdn/${presid}`; // Replace with the directory you want to search in
     const fileNameToSearch = slide; // Replace with the desired file name (without extension)
-    
+    console.log(directoryToSearch)
     const files = fs.readdirSync(directoryToSearch);
     
     for (const file of files) {
@@ -70,12 +107,11 @@ wss.on('connection', (ws) => {
 
     ws.on('message', (message) => {
         console.log(`Recieved: ${message}`);
-
+        slide = Number(`${message}`)
         wss.clients.forEach((client) => {
             // console.log("i")
             // if(client !== ws && client.readyState === WebSocket.OPEN) {
                 client.send(Number(`${message}`));
-                slide = Number(`${message}`)
                 // console.log(`${message}`);
                 // console.log('send' + message)
             // }
@@ -83,7 +119,7 @@ wss.on('connection', (ws) => {
     })
     ws.on('close', () => {
         console.log('WebSocket disconnected');
-    })
+    }) 
 })
 
 server.listen(3000, () => {
