@@ -13,8 +13,13 @@
             margin: 0 0 0 0;
             background-color: black;
         }
+        html, body, #slide {
+            overflow: hidden;
+            margin: 0 0 0 0;
+        }
+
         #slide {
-            width: 99vw;
+            width: 100vw;
             height: 100vh;
      
         }
@@ -29,8 +34,13 @@
 
     </style>
     <script>
-        const socket = new WebSocket('ws://localhost:3000');
+        const socket = new WebSocket(`ws://${window.location.host}`);
         const presid = window.location.search.split('?')[1];
+        socket.addEventListener('open', ()=>{
+            socket.send(JSON.stringify({ event: 'register', data: presid }));
+        })
+
+
         console.log(presid)
         socket.onmessage = async (event) => {
             console.log(`Recieved: ${event.data}`);
@@ -43,13 +53,23 @@
                 console.log(type)
                 const slide = document.getElementById('slide');
                 // slide.src = `/slide/1/${event.data}`
-                if(type == "video"){
-                    slide.innerHTML = ` <video autoplay="" id=display>
+                switch(type){
+                    case "video":
+                        slide.innerHTML = ` <video autoplay="" id=display>
                                           <source src="/slide/${presid}/${event.data}" type="video/mp4">
                                         Your br3000owser does not support the video tag.
                                         </video> `
-                } else {
-                    slide.innerHTML = `<${type} src="/slide/${presid}/${event.data}" alt="Error :c" id="display">`
+                        break;
+                    case "img":
+                        slide.innerHTML = `<${type} src="/slide/${presid}/${event.data}" alt="Error :c" id="display">`
+                        break;
+                    case "black":
+                        slide.innerHTML = "";
+                        break;
+                    case "keep":
+                        break;
+                    default:
+                        break;
                 }
             }
         }
