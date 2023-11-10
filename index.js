@@ -51,7 +51,7 @@ app.get('/slideinfo/', (req, res) => {
         var files = fs.readdirSync(__dirname+ `/cdn/${directory}`).sort();
         var file = files[files.length - 1]
         try{
-        preslength = Math.max(preslength, Number(path.basename(file, path.extname(file))))
+        preslength = Math.max(preslength, Number(path.basename(file, path.extname(file).split("-")[0])))
         } catch (err) {
             throw new Error("invalid presentation")
         }
@@ -65,10 +65,19 @@ app.get('/slideinfo/', (req, res) => {
 })
 
 app.get('/slideinfo/:presid/:slide', (req, res) => {
+    let file = findFile(req.params.presid, req.params.slide)
+    if(file == undefined){
+        res.send({
+            "type":"keep",
+            "transition":""
+        })
+        return
+    }
     //console.log(path.extname(findFile(req.params.presid, req.params.slide)));
+    // console.log(path.basename(file, path.extname(file)).split("-"))
     var type = ()=>{ 
         try{
-        switch(path.extname(findFile(req.params.presid, req.params.slide))){
+        switch(path.extname(file)){
             case ".png":
             case ".jpg":
             case ".gif":
@@ -89,8 +98,24 @@ app.get('/slideinfo/:presid/:slide', (req, res) => {
             return "keep";
         }   
     }
+    // yes please 🏳️‍🌈
+    var transistion = () => {
+        switch(path.basename(file, path.extname(file)).split("-")[1]){
+                case "in":
+                    return "in"
+                case "out":
+                    return "out"
+                case "inout":
+                    return "inout"
+                case undefined:
+                    return ""
+                default:
+                    return ""
+            } 
+        }
     var info = {
         "type":type(),
+        "transition": transistion(),
     }
     res.send(info)
 })
@@ -114,7 +139,7 @@ function findFile(presid, slide){
       const filePath = path.join(directoryToSearch, file);
       const baseName = path.basename(file, path.extname(file));
     
-      if (baseName.toLowerCase() === fileNameToSearch.toLowerCase()) {
+      if (baseName.toLowerCase().split("-")[0] === fileNameToSearch.toLowerCase()) {
         return filePath; 
       }   
     }

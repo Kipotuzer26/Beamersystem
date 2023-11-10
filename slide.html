@@ -13,6 +13,13 @@
             margin: 0 0 0 0;
             background-color: black;
         }
+
+        .in {
+            display: none; /* Hide the element by default */
+            opacity: 0; /* Start with 0 opacity */
+            transition: opacity 1s; /* Add a smooth transition effect */
+        }
+
         html, body, #slide {
             overflow: hidden;
             margin: 0 0 0 0;
@@ -40,36 +47,57 @@
             socket.send(JSON.stringify({ event: 'register', data: presid }));
         })
 
+        function Sleep(milliseconds) {
+            return new Promise(resolve => setTimeout(resolve, milliseconds));
+        }
+        var out = false;
+        var outlength = 1;
 
         console.log(presid)
         socket.onmessage = async (event) => {
-            console.log(`Recieved: ${event.data}`);
+            // console.log(`Recieved: ${event.data}`);
             if(Number(event.data) != NaN){
                 //get type
                 var response = await fetch(`/slideinfo/${presid}/${event.data}`)
                 var json = await response.json();
                 var type = json.type;
-                var next = json.nextSlide;
-                console.log(type)
+                var transition = json.transition;
+                console.log(transition)
+                var trIn = json.transition === "in" || json.transition === "inout";
+                if(out){
+                    document.getElementById("display").style.opacity = 0;
+                }
+                await Sleep(1000*out)
+                out = json.transition === "out" || json.transtion === "inout";
+                console.log(trIn)
+                // console.log(type)
                 const slide = document.getElementById('slide');
                 // slide.src = `/slide/1/${event.data}`
                 switch(type){
                     case "video":
-                        slide.innerHTML = ` <video autoplay="" id=display>
+                        slide.innerHTML = ` <video ${trIn ? "class='in'":""} autoplay="" id="display">
                                           <source src="/slide/${presid}/${event.data}" type="video/mp4">
                                         Your br3000owser does not support the video tag.
                                         </video> `
                         break;
                     case "img":
-                        slide.innerHTML = `<${type} src="/slide/${presid}/${event.data}" alt="Error :c" id="display">`
+                        slide.innerHTML = `<${type} ${trIn ? "class='in'":""} src="/slide/${presid}/${event.data}" alt="Error :c" id="display">`
                         break;
                     case "black":
-                        slide.innerHTML = "";
+                        slide.innerHTML = "<div id='display'></div>";
                         break;
                     case "keep":
                         break;
                     default:
                         break;
+                }
+                if(trIn){
+                    setTimeout(() => {
+                        var display =document.getElementById("display")
+                        display.style.display = 'block'; // Make the element visible
+                        display.style.opacity = 1; // Set full opacity
+                    }, 10); // A small delay to ensure the effect works
+
                 }
             }
         }
