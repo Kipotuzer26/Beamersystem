@@ -9,6 +9,9 @@
     </div>
 </body>
     <style>
+        :root {
+            --transition-duration: 0.5s; /* Default transition duration */
+        }
         body{
             margin: 0 0 0 0;
             background-color: black;
@@ -17,7 +20,7 @@
         .in {
             display: none; /* Hide the element by default */
             opacity: 0; /* Start with 0 opacity */
-            transition: opacity 1s; /* Add a smooth transition effect */
+            transition: opacity var(--transition-duration); /* Add a smooth transition effect */
         }
 
         html, body, #slide {
@@ -51,53 +54,71 @@
             return new Promise(resolve => setTimeout(resolve, milliseconds));
         }
         var out = false;
-        var outlength = 1;
-
+        var lengthOut = 0.5;
+        var type;
+        var transition;
+        var currentSlide;
         console.log(presid)
         socket.onmessage = async (event) => {
             // console.log(`Recieved: ${event.data}`);
             if(Number(event.data) != NaN){
                 //get type
+
+                //gets Information for source url, slide type, transition type and length.
                 var response = await fetch(`/slideinfo/${presid}/${event.data}`)
                 var json = await response.json();
-                var type = json.type;
-                var transition = json.transition;
+                type = json.type;
+                transition = json.transition;
+                currentSlide = event.data;
+                var lengthIn = json.lengthIn;
                 console.log(transition)
+                //do i transition?
                 var trIn = json.transition === "in" || json.transition === "inout";
+                const slide = document.getElementById('slide');
+                //handles transitions that fade out
                 if(out){
-                    document.getElementById("display").style.opacity = 0;
+                    setTimeout(()=>{document.getElementById("display").style.opacity = 0}, 20);
+                    setTimeout(()=>{updateSlide()},lengthOut*1000);
+                    console.log("tried to delay")
+                } else {
+                    updateSlide();
                 }
-                await Sleep(1000*out)
-                out = json.transition === "out" || json.transtion === "inout";
+                out = json.transition === "out" || json.transition === "inout";
+                lengthOut = json.lengthOut; 
+                console.log("out",lengthOut)
                 console.log(trIn)
                 // console.log(type)
-                const slide = document.getElementById('slide');
-                // slide.src = `/slide/1/${event.data}`
-                switch(type){
-                    case "video":
-                        slide.innerHTML = ` <video ${trIn ? "class='in'":""} autoplay="" id="display">
-                                          <source src="/slide/${presid}/${event.data}" type="video/mp4">
-                                        Your br3000owser does not support the video tag.
-                                        </video> `
-                        break;
-                    case "img":
-                        slide.innerHTML = `<${type} ${trIn ? "class='in'":""} src="/slide/${presid}/${event.data}" alt="Error :c" id="display">`
-                        break;
-                    case "black":
-                        slide.innerHTML = "<div id='display'></div>";
-                        break;
-                    case "keep":
-                        break;
-                    default:
-                        break;
-                }
-                if(trIn){
-                    setTimeout(() => {
-                        var display =document.getElementById("display")
-                        display.style.display = 'block'; // Make the element visible
-                        display.style.opacity = 1; // Set full opacity
-                    }, 10); // A small delay to ensure the effect works
+                // slide.src = `/slide/1/${event.data}
+                function updateSlide() {
+                    document.documentElement.style.setProperty('--transition-duration', `${lengthIn}s`)
+                    switch(type){
+                        case "video":
+                            slide.innerHTML = ` <video ${trIn ? "class='in'":""} autoplay="" id="display">
+                                              <source src="/slide/${presid}/${currentSlide}" type="video/mp4">
+                                            Your br3000owser does not support the video tag.
+                                            </video> `
+                            break;
+                        case "img":
+                            slide.innerHTML = `<${type} ${trIn ? `class='in'`:""} src="/slide/${presid}/${currentSlide}" alt="Error :c" id="display">`
+                            break;
+                        case "black":
+                            slide.innerHTML = "<div id='display'></div>";
+                            break;
+                        case "keep":
+                            break;
+                        default:
+                            break;
+                    }
 
+                    //handles fadein
+                    if(trIn){
+                        setTimeout(() => {
+                            var display =document.getElementById("display")
+                            display.style.display = 'block'; // Make the element visible
+                            display.style.opacity = 1; // Set full opacity
+                        }, 10); // A small delay to ensure the effect works
+                    }
+                    document.documentElement.style.setProperty('--transition-duration', `${lengthOut}s`)
                 }
             }
         }

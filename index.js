@@ -69,7 +69,9 @@ app.get('/slideinfo/:presid/:slide', (req, res) => {
     if(file == undefined){
         res.send({
             "type":"keep",
-            "transition":""
+            "transition":"",
+            "lengthIn": 1,
+            "lengthOut": 1,
         })
         return
     }
@@ -89,6 +91,9 @@ app.get('/slideinfo/:presid/:slide', (req, res) => {
             case ".black":
                 return "black"
                 break;
+            case ".keep":
+                return "keep"
+                break
             default:
                 return "img"
                 break;
@@ -107,16 +112,39 @@ app.get('/slideinfo/:presid/:slide', (req, res) => {
                     return "out"
                 case "inout":
                     return "inout"
+                case "blend":
+                    return "blend"
+                case "inblend":
+                    return "inblend"
                 case undefined:
                     return ""
                 default:
                     return ""
-            } 
+            }
         }
+    var transitionLengthIn = () => {
+        var length =  Number(path.basename(file, path.extname(file)).split("-")[2]);
+        if(isNaN(length)){
+            return 1;
+        } else {
+            return length;
+        }
+    } 
+    var transitionLengthOut = () => {
+        var length =  Number(path.basename(file, path.extname(file)).split("-")[3]);
+        if(isNaN(length)){
+            return 1;
+        } else {
+            return length;
+        }
+    }
     var info = {
         "type":type(),
         "transition": transistion(),
+        "lengthIn": transitionLengthIn(),
+        "lengthOut": transitionLengthOut(),
     }
+    console.log(info)
     res.send(info)
 })
 
