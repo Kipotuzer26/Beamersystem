@@ -138,6 +138,11 @@
             box-shadow: 0 2px 25px rgba(58, 58, 58, 0.5);
             font-family: Arial, Helvetica, sans-serif;   
         }
+        #reset{
+          display: block;
+          margin-left: auto;
+          margin-right: auto;
+        }
     </style>
 
 </head>
@@ -150,10 +155,13 @@
         <hr>
         <div id="output"></div>
     </div>
+    <button class="button" id="reset" onclick="reset()">reset</button>
+
 </body>
     <script>
         var slide;
         var presLength;
+        var connected = false;
         var init = async () => {
             var response = await fetch(`/slideinfo/`)
             var json = await response.json();
@@ -164,12 +172,22 @@
             return;
         }
 
-        const socket = new WebSocket(`ws://${window.location.host}`);
+        async function reset(){
+          await fetch('/reset/');
+          location.reload()
+        }
+
+        var socket = new WebSocket(`ws://${window.location.host}`);
+        
         socket.addEventListener('open', ()=>{
             socket.send(JSON.stringify({ event: 'register', data: "controller" }));
         })
-
-        socket.onmessage = async (event) => {
+        const onMessage = async (event) => {
+          if(event.data == "reset"){
+                location.reload();
+                return;
+            }
+          connected = true;
             if(!presLength){
                 await init();
             }
@@ -182,6 +200,24 @@
 
             output.innerHTML = `<p> Set current Slide to: ${event.data}/${presLength} </p>`;
             
+        }
+        socket.onmessage = onMessage;
+        socket.onclose = async (event) => {
+          console.log()
+          output.innerHTML = `<p> Lost Connection to the Server. Please wait...`
+          connected = false;
+          while(!connected){
+            socket = new WebSocket(`ws://${window.location.host}`);
+            socket.addEventListener('open', ()=>{
+              socket.send(JSON.stringify({ event: 'register', data: "controller" }));
+            })
+            socket.onmessage = onMessage;
+            await Sleep(3000)
+        }
+
+          function Sleep(milliseconds) {
+            return new Promise(resolve => setTimeout(resolve, milliseconds));
+          }
         }
 
         function sendMessage(direction) {

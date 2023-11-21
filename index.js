@@ -47,11 +47,11 @@ function getDirectories(path){
 app.get('/slideinfo/', (req, res) => {
     // console.log(path.extname(findFile(req.params.presid, req.params.slide)));
     preslength = 0;
-    getDirectories(__dirname + "/cdn/").forEach((directory)=>{
+    getDirectories(__dirname + `/cdn/`).forEach((directory)=>{
         var files = fs.readdirSync(__dirname+ `/cdn/${directory}`).sort();
         var file = files[files.length - 1]
         try{
-        preslength = Math.max(preslength, Number(path.basename(file, path.extname(file).split("-")[0])))
+        preslength = Math.max(preslength, Number(path.basename(file, path.extname(file)).split("-")[0]))
         } catch (err) {
             throw new Error("invalid presentation")
         }
@@ -64,14 +64,49 @@ app.get('/slideinfo/', (req, res) => {
     res.send(info)
 })
 
+function lastSlide(presid, slide){
+    let lastSlide = 0;
+
+        fs.readdirSync(__dirname+ `/cdn/${presid}`).forEach((file)=>{
+            try{
+            if(path.extname(file) == ".keep"){return;}
+            lastSlide = Math.min(slide-1, Math.max(Number(path.basename(file, path.extname(file)).split("-")[0]), lastSlide));
+            } catch (err) {
+                throw new Error("invalid presentation")
+            }
+        });
+    console.log(lastSlide);
+    return lastSlide;
+}
+
+app.get('/reset/', (req, res) => {
+    wss.clients.forEach((client) => {
+        // console.log("i")
+        // if(client !== ws && client.readyState === WebSocket.OPEN) {
+            client.send("reset");
+            // console.log(`${message}`);
+            // console.log('send' + message)
+        // }
+    });
+})
+
 app.get('/slideinfo/:presid/:slide', (req, res) => {
     let file = findFile(req.params.presid, req.params.slide)
+    let lastFile;
     if(file == undefined){
+        lastFile = lastSlide(req.params.presid, req.params.slide);
         res.send({
+            "slide": req.params.slide,
+            "lastSlide": lastFile,
             "type":"keep",
-            "transition":"",
-            "lengthIn": 1,
-            "lengthOut": 1,
+            "src": `/slide/${req.params.presid}/${req.params.slide}`,
+            "transition": {
+                in: false,
+                out: false,
+                blend: false,
+                "lengthIn": 1,
+                "lengthOut": 1,
+            },
         })
         return
     }
@@ -104,23 +139,37 @@ app.get('/slideinfo/:presid/:slide', (req, res) => {
         }   
     }
     // yes please 🏳️‍🌈
-    var transistion = () => {
+    var transition = () => {
+        let In = false;
+        let Out = false;
+        let blend = false;
         switch(path.basename(file, path.extname(file)).split("-")[1]){
                 case "in":
-                    return "in"
+                    In = true;
+                    break;
                 case "out":
-                    return "out"
+                    Out = true;
+                    break;
                 case "inout":
-                    return "inout"
+                    In = true
+                    Out = true
+                    break;
                 case "blend":
-                    return "blend"
+                    blend = true;
+                    break;
                 case "inblend":
-                    return "inblend"
-                case undefined:
-                    return ""
+                    In = true;
+                    blend = true;        lastFile = lastSlide(req.params.presid, req.params.slide);
+
+                    break;
                 default:
-                    return ""
+                    break;
             }
+        return({
+            "blend" : blend,
+            "in" : In,
+            "out": Out,
+        })
         }
     var transitionLengthIn = () => {
         var length =  Number(path.basename(file, path.extname(file)).split("-")[2]);
@@ -138,14 +187,20 @@ app.get('/slideinfo/:presid/:slide', (req, res) => {
             return length;
         }
     }
-    var info = {
-        "type":type(),
-        "transition": transistion(),
-        "lengthIn": transitionLengthIn(),
-        "lengthOut": transitionLengthOut(),
-    }
-    console.log(info)
-    res.send(info)
+    var transInfo = transition()
+    res.send({
+        "slide": req.params.slide,
+        "lastSlide": lastSlide(req.params.presid, req.params.slide),
+        "type": type(),
+        "src": `/slide/${req.params.presid}/${req.params.slide}`,
+        "transition": {
+            in: transInfo.in,
+            out: transInfo.out,
+            blend: transInfo.blend,
+            "lengthIn": transitionLengthIn(),
+            "lengthOut": transitionLengthOut(),
+        },
+    })
 })
 
 app.get('/slide/:presid/:slide', (req, res) =>{
