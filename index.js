@@ -4,12 +4,12 @@ const { arrayBuffer } = require('stream/consumers');
 const WebSocket = require('ws')
 const fs = require('fs');
 const path = require('path');
-
-
+const { networkInterfaces } = require('os');
+var devip = require('dev-ip');
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server })
-
+const { exec } = require('child_process');
 // const clients = new Map();
 
 var slide = 1;
@@ -281,4 +281,25 @@ wss.on('connection', (ws) => {
 
 server.listen(3000, () => {
     console.log('Server is running on port 3000')
+    console.log('Printing ipconfig/ifconfig')
+    setTimeout(()=>{
+    exec('ifconfig', (err, stdout, stderr) => {
+        if (err) {
+          // node couldn't execute the command
+          return;
+        }
+      
+        // the *entire* stdout and stderr (buffered)
+        console.log(`${stdout}`);
+      });
+    exec('ipconfig', (err, stdout, stderr) => {
+        if (err) {
+          // node couldn't execute the command
+          return;
+        }
+      
+        // the *entire* stdout and stderr (buffered)
+        console.log(`${stdout}`);
+      });
+    },1000)
 })
