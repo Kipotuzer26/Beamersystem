@@ -120,7 +120,7 @@
                     json = json2;
                 }
                 //handles backsteps
-                if(slideNr && json.slide < slideNr ){
+                if(slideNr && Number(json.slide) < Number(slideNr)){
                     document.documentElement.style.setProperty('--blend-duration', `${0}s`)
                     document.documentElement.style.setProperty('--transition-duration', `${0}s`)
                     blend = false;
