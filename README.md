@@ -13,6 +13,9 @@ Supports:
 - Keeping Slides (.keep)
 
 # How to create a Presentation
+
+- Clone the Repo
+
 - create new folder in /cdn/
 
 ```mkdir ./cdn/beamer/ ```
@@ -68,5 +71,10 @@ Beamer
 │       6.black
 ```
 
-- open a folder in the Beamersystem Terminal, then ```node index.js```
+- open ```/Beamersystem/``` Terminal, then ```node ./index.js```
 - connect your devices to the same network. In the browser open \[Your Device IP\]:3000 
+
+## ToDo:
+
+- [ ] Presentation Creator/Editor UI
+- [ ] Local Domain
