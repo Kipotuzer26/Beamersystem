@@ -5,6 +5,8 @@
     <title>Websocket Example</title>
 </head>
 <body>
+    <div id="fullscreen" onclick="requestFullScreen(document.body);document.getElementById('fullscreen').remove()">
+    </div>
     <div id="overlay"></div>
     <div id="slide">
     </div>
@@ -24,6 +26,16 @@
             transition: opacity var(--transition-duration); /* Add a smooth transition effect */
         }
 
+        #fullscreen{
+            position: fixed;
+            left: 0;
+            right: 0;
+            height: 100vh;
+            width: 100vw;
+            font-size: x-large;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
         .infixed {
             display: none;
             opacity: 0;
@@ -36,12 +48,13 @@
         html, body, #slide {
             overflow: hidden;
             margin: 0 0 0 0;
+            cursor: none;
         }
 
         #slide { 
             width: 100vw;
             height: 100vh;
-     
+
         }
 
         #display {
@@ -54,7 +67,6 @@
 
     </style>
     <script>
-
         const socket = new WebSocket(`ws://${window.location.host}`);
         const presid = window.location.search.split('?')[1];
         var timeouts = [];
@@ -65,6 +77,7 @@
         function Sleep(milliseconds) {
             return new Promise(resolve => setTimeout(resolve, milliseconds));
         }
+        var slideNr;
         var out = false;
         var blend = false;
         var lengthOut = 0.5;
@@ -91,7 +104,6 @@
 
             if(Number(event.data) != NaN){
 
-
                 //get type  
 
                 //gets Information for source url, slide type, transition type and length.
@@ -101,11 +113,21 @@
                 console.log(json);
                 if(json.type == "keep"){
                     var response2 = await fetch(`/slideinfo/${presid}/${json.lastSlide}`)
+                    
                     var json2 = await response2.json();
                     console.log(json2)
                     json2.transition = json.transition;
                     json = json2;
                 }
+                //handles backsteps
+                if(slideNr && json.slide < slideNr ){
+                    document.documentElement.style.setProperty('--blend-duration', `${0}s`)
+                    document.documentElement.style.setProperty('--transition-duration', `${0}s`)
+                    blend = false;
+                    out = false;
+                    json.in = false;
+                }
+                slideNr = json.slide;
                 //fade out before new variables are set 
                 console.log(json)
                 if(out){   
@@ -119,6 +141,7 @@
                 updateSlide(json);
         }
     }
+
 
     function handleBlend(json){
         var slide = document.getElementById("slide")
@@ -138,7 +161,7 @@
                     document.documentElement.style.setProperty('--transition-duration', `${json.transition.lengthIn}s`)
                     switch(json.type){
                         case "video":   
-                            slide.innerHTML = ` <video ${json.transition.in  ? "class='in'":""} autoplay="" id="display">
+                            slide.innerHTML = ` <video loop ${json.transition.in  ? "class='in'":""} autoplay="" id="display">
                                               <source src="${json.src}" type="video/mp4">
                                             Your browser does not support the video tag.
                                             </video> `
@@ -181,5 +204,19 @@
                         display.classList.add("in")
                     }
                 }
+        function requestFullScreen(element) {
+            // Supports most browsers and their versions.
+            var requestMethod = element.requestFullScreen || element.webkitRequestFullScreen || element.mozRequestFullScreen || element.msRequestFullScreen;
+        
+            if (requestMethod) { // Native full screen.
+                requestMethod.call(element);
+            } else if (typeof window.ActiveXObject !== "undefined") { // Older IE.
+                var wscript = new ActiveXObject("WScript.Shell");
+                if (wscript !== null) {
+                    wscript.SendKeys("{F11}");
+                }
+            }
+        }
+    
     </script>
 </html>

@@ -27,6 +27,9 @@ app.get('/controller', (req, res) => {
     res.sendFile(__dirname + '/controller.html');
 })
 
+app.get('/calibrate', (req, res) => {
+    res.sendFile(__dirname + '/calibrate.html');
+})
 
 app.get('/presentations', (req, res) => {
     var presentations = []
@@ -49,12 +52,13 @@ app.get('/slideinfo/', (req, res) => {
     preslength = 0;
     getDirectories(__dirname + `/cdn/`).forEach((directory)=>{
         var files = fs.readdirSync(__dirname+ `/cdn/${directory}`).sort();
-        var file = files[files.length - 1]
-        try{
-        preslength = Math.max(preslength, Number(path.basename(file, path.extname(file)).split("-")[0]))
-        } catch (err) {
-            throw new Error("invalid presentation")
-        }
+        files.forEach((file)=>{
+            try{
+            preslength = Math.max(preslength, Number(path.basename(file, path.extname(file)).split("-")[0]))
+            } catch (err) {
+                throw new Error("invalid presentation")
+            }
+        });
     })
 
     var info = {  

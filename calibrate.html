@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>calibrate</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        canvas {
+            border: 1px solid #000;
+            background-color: black; /* Set background color to black */
+        }
+
+        #downloadBtn {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            margin: 10px;
+        }
+        #fullscreen{
+            position: fixed;
+            left: 0;
+            right: 0;
+            height: 100vh;
+            width: 100vw;
+            font-size: x-large;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="fullscreen" onclick="requestFullScreen(document.body);document.getElementById('fullscreen').remove()"></div>
+    <canvas id="drawCanvas"></canvas>
+    <button id="downloadBtn">Download Image</button>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const canvas = document.getElementById("drawCanvas");
+            const ctx = canvas.getContext("2d");
+            let isDrawing = false;
+            let rect = canvas.getBoundingClientRect(); // Get the canvas position on the page
+            let start = { x: 0, y: 0 };
+            let lines = [];
+
+            setupCanvas(); // Set up initial canvas properties
+
+            window.addEventListener("resize", function() {
+                setupCanvas(); // Update canvas size on window resize
+                redrawLines();
+            });
+
+            canvas.addEventListener("mousedown", startDrawing);
+            canvas.addEventListener("mousemove", drawStraightLine);
+            canvas.addEventListener("mouseup", stopDrawing);
+            canvas.addEventListener("mouseleave", stopDrawing);
+
+            const downloadBtn = document.getElementById("downloadBtn");
+            downloadBtn.addEventListener("click", downloadImage);
+
+            function setupCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                rect = canvas.getBoundingClientRect(); // Update canvas position on the page
+            }
+
+            function startDrawing(e) {
+                isDrawing = true;
+                start = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+                lines.push({
+                    start: { ...start },
+                    end: { ...start },
+                    color: getRandomBrightColor(),
+                }); // Save the line coordinates and color
+            }
+            
+
+            function drawStraightLine(e) {
+                // ctx.beginPath();
+                // ctx.arc(e.clientX - rect.left, e.clientY - rect.top, 4, 0, 2*Math.PI, false);
+                // ctx.fillStyle = white;
+                // ctx.fill();
+
+                if (!isDrawing) return;
+
+                lines[lines.length - 1].end = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+                redrawLines();
+
+                ctx.strokeStyle = lines[lines.length - 1].color; // Set stroke color to the saved color
+                ctx.beginPath();
+                ctx.moveTo(start.x, start.y);
+                ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+                ctx.stroke();
+            }
+
+            function stopDrawing() {
+                if (isDrawing) {
+                    isDrawing = false;
+                    start = { x: 0, y: 0 };
+                }
+            }
+
+            function redrawLines() {
+                lines.forEach(line => {
+                    ctx.strokeStyle = line.color; // Set stroke color to the saved color
+                    ctx.beginPath();
+                    ctx.moveTo(line.start.x, line.start.y);
+                    ctx.lineTo(line.end.x, line.end.y);
+                    ctx.stroke();
+                });
+            }
+
+            function downloadImage() {
+                const image = canvas.toDataURL("image/png");
+                const link = document.createElement("a");
+                link.href = image;
+                link.download = "drawing.png";
+                link.click();
+            }
+
+            function getRandomBrightColor() {
+                const letters = "0123456789ABCDEF";
+                let color = "#";
+                for (let i = 0; i < 6; i++) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                }
+                return color;
+            }
+        });
+
+        function requestFullScreen(element) {
+            // Supports most browsers and their versions.
+            var requestMethod = element.requestFullScreen || element.webkitRequestFullScreen || element.mozRequestFullScreen || element.msRequestFullScreen;
+        
+            if (requestMethod) { // Native full screen.
+                requestMethod.call(element);
+            } else if (typeof window.ActiveXObject !== "undefined") { // Older IE.
+                var wscript = new ActiveXObject("WScript.Shell");
+                if (wscript !== null) {
+                    wscript.SendKeys("{F11}");
+                }
+            }
+        }
+    </script>
+</body>
+</html>

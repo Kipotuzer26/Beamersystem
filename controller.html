@@ -151,6 +151,7 @@
         <div class="input">
             <button class="button" id="back"onclick="sendMessage('back')">back</button>
             <button class="bubbly-button" id="next"onclick="sendMessage('next')">next</button>
+            <!-- <label><input type="checkbox" onclick="preview(this)">preview</label> -->
         </div>
         <hr>
         <div id="output"></div>
@@ -176,6 +177,24 @@
           await fetch('/reset/');
           location.reload()
         }
+
+
+        document.addEventListener("keydown", (event)=>{
+          //console.log(event.keyCode)
+          switch(event.keyCode){
+            case 39:
+              document.getElementById("next").click()
+              animateButton({"preventDefault":"", "target":document.getElementById("next")})
+            // if(slide == Number(presLength)){return;}
+            //   sendMessage("next")
+              break;
+            case 37:
+              document.getElementById("back").click();
+            // if(slide == 1){return;}
+            //   sendMessage("back")
+              break;
+          }
+        }, false)
 
         var socket = new WebSocket(`ws://${window.location.host}`);
         
